@@ -24,5 +24,5 @@ app.delete('/', (req, res) => {
 
 
 app.listen(port, () => {
-  console.log(`Recipes app listening on port ${port}`)
+  console.log(`Films app listening on port ${port}`)
 })
