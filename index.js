@@ -5,10 +5,7 @@ import filmsRouter from './routes/films.js';
 const app = express();
 const port = 8000;
 
-console.log(process.env.POTATOE_HOST)
-
-
-
+app.use(express.json());
 app.use('/films', filmsRouter)
 
 
