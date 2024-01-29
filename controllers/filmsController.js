@@ -1,52 +1,29 @@
-let films = [
-    {
-        id: 1,
-        name: "The Godfather",
-        releaseYear: 1972
-    },
-    {
-        id: 2,
-        name: "The Apartment",
-        releaseYear: 1960
-    },
-    {
-        id: 3,
-        name: "The Artist",
-        releaseYear: 2011
-    }
-];
+import { pool } from "../db/pool.js";
 
-export const getFilms = (req, res) => {
-    const searchTerm = req.query.search;
- 
-    // If no search term provided, retrieve all films
-    if (!searchTerm) {
-      return res.send(films);
+export const getFilms = async (req, res) => {
+    try {
+        const {rows} = await pool.query('SELECT * FROM films');
+        res.json(rows)
+    } catch(err){
+        res.sendStatus(500)
     }
- 
-    // Otherwise, find the recipe
-    // Find films that match the search term (case insensitive and partial match)
-    const matchedFilms = films.filter(film => 
-        film.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    // If the filter gets no results, 404 Not Found status is returned to the client with a message indicating that no records match the criteria.
-    if (matchedFilms.length === 0) {
-      return res.status(404).send('Films not found');
-    }
- 
-    res.json(matchedFilms);
+    
 }
 
-export const getFilm = (req, res) => {
+export const getFilm = async (req, res) => {
     const {id} = req.params;
-
-    //ID is parsed from a string to an integer to ensure that it can be compared to the id property of each recipe, which is type number. 
-    const film = films.find(film => film.id === parseInt(id));
-
-    //If no film is found, 404 Not Found status is returned to the client with a message indicating that the resource was not found.
-    if (!film) {
-      return res.status(404).send('Film not found')
+    try {
+        const {rows} = await pool.query(`SELECT * FROM films WHERE id=${id}`);
+        if(rows.length === 0){
+            res.sendStatus(404)
+        } else {
+            res.json(rows[0])
+        }
+        console.log(rows)
+        //res.json(rows)
+    } catch(err){
+        res.sendStatus(500)
     }
+
    
-    res.send(film)
 }
