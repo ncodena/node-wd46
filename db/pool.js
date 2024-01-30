@@ -1,5 +1,5 @@
-import pg from 'pg'
+import patata from 'pg'
 
-const { Pool } = pg;
+const { Pool } = patata;
 
 export const pool = new Pool()
