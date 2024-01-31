@@ -15,7 +15,6 @@ app.get('/', (req, res) => {
     res.send('GET request to the root')
 })
 
-
 app.listen(port, () => {
   console.log(`Films app listening on port ${port}`)
 })

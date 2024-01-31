@@ -4,9 +4,15 @@ import { body, validationResult } from 'express-validator';
 export const userValidation = [
     body('first_name').isString().notEmpty(),
     body('last_name').isString().notEmpty(),
-    body('age').isInt({ min: 1 }),
+    body('age').isInt({ min: 1 }).notEmpty(),
 ];
 
+export const userValidationOptional = [
+    body('first_name').optional().isString().notEmpty(),
+    body('last_name').optional().isString().notEmpty(),
+    body('age').optional().isInt({ min: 1 }),
+    body('active').optional().isBoolean(),
+];
 
 export const getUsers = async (req, res) => {
     try {
@@ -55,14 +61,73 @@ export const modifyUser = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
         const { first_name, last_name, age, active } = req.body;
-        const query = 'UPDATE users SET first_name = $1, last_name = $2, age = $3, active = $4 WHERE id = $5 RETURNING *;';
+        const query = `UPDATE users SET first_name = $1, last_name = $2, age = $3, active = $4 WHERE id = $5 RETURNING *`;
         const values = [first_name, last_name, age, active, id];
         const {rows} = await pool.query(query, values);
-        console.log(rows, 'rows')
-        res.json(rows[0]);
+        if(rows.length === 0){
+            res.sendStatus(404)
+        } else {
+            res.json(rows[0]);
+        }
      } catch(err){
-        console.log(err)
         res.sendStatus(500)
+     }
+}
+
+export const modifyUserPartially = async (req, res) => {
+    const {id} = req.params;
+
+     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        const { first_name, last_name, age, active } = req.body;
+        //Initialize array to store query parts
+        const updateFields = [];
+        //Initialize array to store parameter values
+        const values = [];
+        //Example static
+        // if (last_name !== undefined) {
+        //     updateFields.push('last_name = $2');
+        //     values.push(last_name);
+        // }
+
+        if (first_name !== undefined) {
+            updateFields.push(`first_name = ${updateFields.length + 1}`);
+            values.push(first_name);
+        }
+        if (last_name !== undefined) {
+            updateFields.push(`last_name = ${updateFields.length + 1}`);
+            values.push(last_name);
+        }
+        if (age !== undefined) {
+            updateFields.push(`age = ${updateFields.length + 1}`);
+            values.push(age);
+        }
+        if (active !== undefined) {
+            updateFields.push(`active = ${updateFields.length + 1}`);
+            values.push(active);
+        }
+
+        //Adding id into array of parameterized values
+        values.push(id);
+
+        const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${values.length} RETURNING *;`;
+        
+        console.log(query)
+
+        const { rows } = await pool.query(query, values);
+
+        if(rows.length === 0){
+            res.sendStatus(404)
+        } else {
+            res.json(rows[0]);
+        }
+        
+     } catch(err){
+        res.sendStatus(500)
+        console.log(err, 'err')
      }
 }
 
@@ -71,7 +136,11 @@ export const deleteUser = async (req, res) => {
 
      try {
          const {rows} = await pool.query('DELETE FROM users WHERE id=$1 RETURNING *', [id]);
-         res.status(200).json(rows[0])
+         if(rows.length === 0){
+            res.sendStatus(404)
+        } else {
+            res.status(200).json(rows[0])
+        }
      } catch(err){
          res.sendStatus(500)
      }
