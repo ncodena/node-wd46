@@ -12,6 +12,13 @@ const port = 8000;
 //     next();
 // }
 // app.use(middlewareExample)
+
+
+app.get('/', (req, res) => {
+    res.send('GET request to the root')
+})
+
+  
 app.use(express.json());
 app.use('/users', usersRouter);
 app.use('/orders', ordersRouter);

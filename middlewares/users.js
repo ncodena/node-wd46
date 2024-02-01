@@ -60,3 +60,16 @@ export const userValidationOptional = [
     body('age').optional().isInt({ min: 1 }),
     body('active').optional().isBoolean(),
 ];
+
+export const secureMiddleware = async (req, res, next) => {
+    // inspect if there is a param with the name token and a value
+    const {token} = req.params;
+    //If the token has a value and is longer than 3 characters, continue
+    if(token && token.length > 3){
+        next()
+    } else {
+        //when the token doesn’t exist and send back a response with the HTTP code 403.  
+        res.sendStatus(403)
+    }
+
+}  

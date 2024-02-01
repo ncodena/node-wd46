@@ -120,6 +120,29 @@ export const deleteUser = async (req, res) => {
      }
 }
 
+//Create a token for a specific user
+export const createToken = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {token} = req.body;
+    
+        //insert token into db
+        const {rows} = await pool.query('INSERT INTO tokens (value) VALUES ($1) RETURNING id', [token]);
+    
+        //update user's token_id column in the users table
+        await pool.query('UPDATE users SET token_id = $1 WHERE id= $2', [rows[0].id, id]);
+    
+        res.json({tokenId: rows[0].id })
+    } catch(err){
+        res.sendStatus(500)
+
+    }
+}
+
+export const tokenHandler = async (req, res) => {
+    res.sendStatus(200)
+}
+
 // EXTRA
 
 //GET /:id/orders: To get all orders linked to a specific user
