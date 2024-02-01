@@ -1,18 +1,5 @@
 import { pool } from "../db/pool.js";
-import { body, validationResult } from 'express-validator';
-
-export const userValidation = [
-    body('first_name').isString().notEmpty(),
-    body('last_name').isString().notEmpty(),
-    body('age').isInt({ min: 1 }).notEmpty(),
-];
-
-export const userValidationOptional = [
-    body('first_name').optional().isString().notEmpty(),
-    body('last_name').optional().isString().notEmpty(),
-    body('age').optional().isInt({ min: 1 }),
-    body('active').optional().isBoolean(),
-];
+import { validationResult } from 'express-validator';
 
 export const getUsers = async (req, res) => {
     try {
@@ -24,18 +11,8 @@ export const getUsers = async (req, res) => {
     
 }
 
-export const getUser = async (req, res) => {
-    const {id} = req.params;
-    try {
-        const {rows} = await pool.query('SELECT * FROM users WHERE id=$1', [id]);
-        if(rows.length === 0){
-            res.sendStatus(404)
-        } else {
-            res.json(rows[0])
-        }
-    } catch(err){
-        res.sendStatus(500)
-    }
+export const getUser = (req, res) => {
+    res.json(req.user)
 }
 
 export const postUser = async (req, res) => {
@@ -52,29 +29,31 @@ export const postUser = async (req, res) => {
     }
 }
 
-export const modifyUser = async (req, res) => {
-    const {id} = req.params;
+//Old modifyUser controller function
 
-     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-        const { first_name, last_name, age, active } = req.body;
-        const query = `UPDATE users SET first_name = $1, last_name = $2, age = $3, active = $4 WHERE id = $5 RETURNING *`;
-        const values = [first_name, last_name, age, active, id];
-        const {rows} = await pool.query(query, values);
-        if(rows.length === 0){
-            res.sendStatus(404)
-        } else {
-            res.json(rows[0]);
-        }
-     } catch(err){
-        res.sendStatus(500)
-     }
-}
+// export const modifyUser = async (req, res) => {
+//     const {id} = req.params;
 
-export const modifyUserPartially = async (req, res) => {
+//      try {
+//         const errors = validationResult(req);
+//         if (!errors.isEmpty()) {
+//             return res.status(400).json({ errors: errors.array() });
+//         }
+//         const { first_name, last_name, age, active } = req.body;
+//         const query = `UPDATE users SET first_name = $1, last_name = $2, age = $3, active = $4 WHERE id = $5 RETURNING *`;
+//         const values = [first_name, last_name, age, active, id];
+//         const {rows} = await pool.query(query, values);
+//         if(rows.length === 0){
+//             res.sendStatus(404)
+//         } else {
+//             res.json(rows[0]);
+//         }
+//      } catch(err){
+//         res.sendStatus(500)
+//      }
+// }
+
+export const modifyUserPartially = async (req, res, next) => {
     const {id} = req.params;
 
      try {
@@ -94,40 +73,39 @@ export const modifyUserPartially = async (req, res) => {
         // }
 
         if (first_name !== undefined) {
-            updateFields.push(`first_name = ${updateFields.length + 1}`);
+            updateFields.push(`first_name = $${updateFields.length + 1}`);
             values.push(first_name);
         }
         if (last_name !== undefined) {
-            updateFields.push(`last_name = ${updateFields.length + 1}`);
+            updateFields.push(`last_name = $${updateFields.length + 1}`);
             values.push(last_name);
         }
         if (age !== undefined) {
-            updateFields.push(`age = ${updateFields.length + 1}`);
+            updateFields.push(`age = $${updateFields.length + 1}`);
             values.push(age);
         }
         if (active !== undefined) {
-            updateFields.push(`active = ${updateFields.length + 1}`);
+            updateFields.push(`active = $${updateFields.length + 1}`);
             values.push(active);
         }
 
         //Adding id into array of parameterized values
         values.push(id);
+        // if all the required fields are missing, throw 400 error
+        if(!first_name && !last_name && !age && active === undefined) {
+            // return res.sendStatus(400)
+            return next({statusCode: 400, message: "Bad request"});
+        }
 
         const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${values.length} RETURNING *;`;
-        
-        console.log(query)
 
         const { rows } = await pool.query(query, values);
 
-        if(rows.length === 0){
-            res.sendStatus(404)
-        } else {
-            res.json(rows[0]);
-        }
+        return res.json(rows[0]);
+        
         
      } catch(err){
-        res.sendStatus(500)
-        console.log(err, 'err')
+        next(err)
      }
 }
 
@@ -135,14 +113,10 @@ export const deleteUser = async (req, res) => {
     const {id} = req.params;
 
      try {
-         const {rows} = await pool.query('DELETE FROM users WHERE id=$1 RETURNING *', [id]);
-         if(rows.length === 0){
-            res.sendStatus(404)
-        } else {
-            res.status(200).json(rows[0])
-        }
+        const {rows} = await pool.query('DELETE FROM users WHERE id=$1 RETURNING *', [id]);
+        return res.status(200).json(rows[0])
      } catch(err){
-         res.sendStatus(500)
+        res.sendStatus(500)
      }
 }
 
