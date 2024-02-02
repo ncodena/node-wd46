@@ -4,7 +4,7 @@ import usersRouter from './routes/users.js';
 import ordersRouter from './routes/orders.js';
 
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 // const middlewareExample = (req, res, next) => {
 //     //Perform soem action on the request or response
