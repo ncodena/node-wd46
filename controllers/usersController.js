@@ -121,7 +121,7 @@ export const deleteUser = async (req, res) => {
 }
 
 //Create a token for a specific user
-export const createToken = async (req, res) => {
+export const createToken = async (req, res, next) => {
     try {
         const {id} = req.params;
         const {token} = req.body;
@@ -134,14 +134,43 @@ export const createToken = async (req, res) => {
     
         res.json({tokenId: rows[0].id })
     } catch(err){
-        res.sendStatus(500)
+        next(err)
 
     }
 }
 
-export const tokenHandler = async (req, res) => {
-    res.sendStatus(200)
+// export const tokenHandler = async (req, res) => {
+//     res.sendStatus(200)
+// }
+
+export const tokenHandler = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+   
+        // Check if the token is available in the database
+        const tokenQuery = 'SELECT id FROM tokens WHERE value = $1';
+        const {rows} = await pool.query(tokenQuery, [token]);
+   
+        if (rows.length === 0) {
+          return next({statusCode: 401, message: "Invalid token"});
+        }
+   
+        // Check if there is a user linked to this token
+        const userQuery = 'SELECT id FROM users WHERE token_id = $1';
+        const userResult = await pool.query(userQuery, [rows[0].id]);
+
+        //if the user is linked to this token –> res.send(“token valid”);
+        if (userResult.rows.length > 0) {
+          return res.send('Token valid');
+        } else {
+            //if the token doesn’t exist or no user is linked to that –> res.status(401).send(“invalid token”);
+            return next({statusCode: 401, message: "Invalid token"});
+        }
+      } catch (err) {
+            next(err)
+      }
 }
+
 
 // EXTRA
 

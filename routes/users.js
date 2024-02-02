@@ -3,7 +3,7 @@ import { getUsers, getUser, postUser, deleteUser, getOrdersFromUser, setUserInac
 import { authMiddleware, checkUser, errorHandler,userValidation, userValidationOptional, secureMiddleware } from '../middlewares/users.js';
 const usersRouter = express.Router();
 
-usersRouter.get('/verify/:token', secureMiddleware, tokenHandler);
+usersRouter.get('/verify/:token', secureMiddleware, tokenHandler, errorHandler);
 usersRouter.get('/createToken/:id', createToken);
 usersRouter.get('/', getUsers);
 usersRouter.get('/:id', checkUser, getUser);
