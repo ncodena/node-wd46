@@ -1,9 +1,10 @@
-import { pool } from "../db/pool.js";
+
+import Film from "../models/Film.js";
 
 export const getFilms = async (req, res) => {
     try {
-        const {rows} = await pool.query('SELECT * FROM films');
-        res.json(rows)
+        const data = await Film.find();
+        res.json(data)
     } catch(err){
         res.sendStatus(500)
     }
@@ -13,29 +14,24 @@ export const getFilms = async (req, res) => {
 export const getFilm = async (req, res) => {
     const {id} = req.params;
     try {
-        const {rows} = await pool.query('SELECT * FROM films WHERE id=$1', [id]);
-        if(rows.length === 0){
+        const data = await Film.findById(id);
+        if(!data){
             res.sendStatus(404)
         } else {
-            res.json(rows[0])
+            res.json(data)
         }
-        console.log(rows)
-        //res.json(rows)
     } catch(err){
         res.sendStatus(500)
     }
 }
 
 export const postFilm = async (req, res) => {
-   console.log('here')
-   console.log(req.body)
     try {
         
         const {name, year, genre} = req.body;
         console.log(name, year, genre)
-        const {rows} = await pool.query('INSERT INTO films (name, year, genre) VALUES ($1, $2, $3) RETURNING *', [name, year, genre]);
-        console.log(rows)
-        res.status(201).json(rows[0])
+        const data = await Film.create({name, year, genre})
+        res.status(201).json(data)
     } catch(err){
         res.sendStatus(500)
     }
@@ -45,9 +41,16 @@ export const modifyFilm = async (req, res) => {
     const {id} = req.params;
 
      try {
-         const {genre} = req.body;
-         const {rows} = await pool.query('UPDATE films SET genre=$1 WHERE id=$2 RETURNING *', [genre, id]);
-         res.status(200).json(rows[0])
+         const {name, genre, year} = req.body;
+
+         let update = {};
+
+         if(name !== undefined) update.name = name;
+         if(genre !== undefined) update.genre = genre;
+         if(year !== undefined) update.year = year;
+         
+         const data = await Film.findByIdAndUpdate(id, update, {new: true})
+         res.status(200).json(data)
      } catch(err){
          res.sendStatus(500)
      }
@@ -57,8 +60,8 @@ export const modifyFilm = async (req, res) => {
     const {id} = req.params;
 
      try {
-         const {rows} = await pool.query('DELETE FROM films WHERE id=$1 RETURNING *', [id]);
-         res.status(200).json(rows[0])
+         const data = await Film.findByIdAndDelete(id)
+         res.status(200).json(data)
      } catch(err){
          res.sendStatus(500)
      }
