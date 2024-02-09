@@ -2,7 +2,7 @@ import User from "../models/User.js";
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().populate('country');
         res.json(users);
       } catch (err) {
         res.status(500).json({ message: err.message });
@@ -13,7 +13,7 @@ export const getUsers = async (req, res) => {
 export const getUser = async (req, res) => {
     const {id} = req.params;
     try {
-        const data = await Film.findById(id);
+        const data = await Film.findById(id).populate('country');
         if(!data){
             res.sendStatus(404)
         } else {
@@ -25,9 +25,9 @@ export const getUser = async (req, res) => {
 }
 
 export const postUser = async (req, res) => {
-    const { name, first_name, email } = req.body;
+    const { name, first_name, email, country } = req.body;
     try {
-      const user = await User.create({ name, first_name, email });
+      const user = await User.create({ name, first_name, email, country });
       res.status(201).json(user);
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -37,7 +37,11 @@ export const postUser = async (req, res) => {
 export const modifyMultipleUsers = async (req, res) => {
     try {
         const result = await User.updateMany({ name: "John" }, { name: "Bob" });
-        res.json(result);
+        if(result.modifiedCount > 0){
+            const users = await User.find({name: "Bob"});
+            res.json(users);
+
+        }
       } catch (err) {
         res.status(500).json({ message: err.message });
       }
