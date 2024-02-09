@@ -58,16 +58,17 @@ export const modifyCountry = async (req, res) => {
 export const deleteCountry = async (req, res) => {
     const { code } = req.params;
     try {
-        const data = await Country.findOneAndDelete({ $or: [{ alpha2Code: code.toUpperCase() }, { alpha3Code: code.toUpperCase() }] });
-        res.status(204).json(data);
+        // const data = await Country.findOneAndDelete({ $or: [{ alpha2Code: code.toUpperCase() }, { alpha3Code: code.toUpperCase() }] });
+        // res.status(204).json(data);
 
         // //Delete endpoint would just change that specific flag in your country object docuent of completely removing it from the collection.
-        // const country = await Country.findOne({ $or: [{ alpha2Code: code.toUpperCase() }, { alpha3Code: code.toUpperCase() }] });
+        const country = await Country.findOne({ $or: [{ alpha2Code: code.toUpperCase() }, { alpha3Code: code.toUpperCase() }] });
         
-        // // Toggle the visited status. Change to opposite boolean state
-        // country.visited = !country.visited;
-        // await country.save();
-        // res.json({ message: `Country ${country.visited ? 'marked as visited' : 'marked as to visit'}.`, country: country });
+        //const country = {name: "anyname"}
+        // Toggle the visited status. Change to opposite boolean state
+        country.visited = !country.visited;
+        await country.save();
+        res.json({ message: `Country ${country.visited ? 'marked as visited' : 'marked as to visit'}.`, country: country });
 
     } catch (error) {
         res.status(500).json({ message: error.message });

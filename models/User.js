@@ -14,12 +14,6 @@ const UserSchema = new mongoose.Schema({
         required: true,
         type: String,
         match: [emailRegex, 'Please fill a valid email address']
-    },
-    country: {
-        type: mongoose.Schema.Types.ObjectId,
-        //matching the exact model name of your Country schema
-        ref: 'Country',
-        required: true
     }
 });
 
