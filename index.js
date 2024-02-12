@@ -4,10 +4,11 @@ import filmsRouter from './routes/films.js';
 import { connectDatabase } from './db/client.js';
 import usersRouter from './routes/users.js';
 import countriesRouter from './routes/countries.js';
+import cors from 'cors';
 
 const app = express();
 const port = 8000;
-
+app.use(cors());
 app.use(express.json());
 app.use('/films', filmsRouter);
 app.use('/users', usersRouter);
