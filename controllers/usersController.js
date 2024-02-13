@@ -50,7 +50,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).send('Invalid credentials');
         }
 
-        const token = generateToken({email: data.email })
+        const token = generateToken({email: data.email, role: data.role })
 
         res.json({token});
 

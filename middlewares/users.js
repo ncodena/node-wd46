@@ -1,11 +1,24 @@
+import jwt from 'jsonwebtoken';
+
 export const authMiddleware = (req, res, next) => {
     const secretToken = process.env.SECRET_TOKEN;
-    const {userToken} = req.body;
- 
-    if(!userToken || userToken !== secretToken){
-         return res.status(401).json({error: 'Unauthorized'})
-    } else {
-         next();
+
+    const authHeader = req.headers.authorization;
+
+    if(!authHeader){
+     return res.sendStatus(401)
     }
+
+    const token = authHeader.split(' ')[1];
+    
+    jwt.verify(token, secretToken, (err, user) => {
+     if(err){
+          return res.sendStatus(403)
+     }
+     req.user = user;
+     next()
+
+    })
+
  
  }
