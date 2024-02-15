@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema({
     password: {
         required: true,
         type: String
+    },
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        //matching the exact model name of your Country schema
+        ref: 'Country',
+        required: true
     }
 });
 

@@ -22,37 +22,38 @@ export const getUsers = async (req, res) => {
     
 }
 
-// export const getUser = async (req, res) => {
-//     const {id} = req.params;
-//     try {
-//         const data = await Film.findById(id).populate('country');
-//         if(!data){
-//             res.sendStatus(404)
-//         } else {
-//             res.json(data)
-//         }
-//     } catch(err){
-//         res.sendStatus(500)
-//     }
-// }
+export const getUser = async (req, res) => {
+    const {id} = req.user;
+    try {
+        const data = await User.findById(id);
+        if(!data){
+            res.sendStatus(404)
+        } else {
+            res.json(data)
+        }
+    } catch(err){
+        res.sendStatus(500)
+    }
+}
 
 export const loginUser = async (req, res) => {
     try {
         const {email, password} = req.body;
-        const data = await User.findOne({email});
-        if(!data){
-            return res.sendStatus(404)
+        const user = await User.findOne({email});
+        console.log(user)
+        if(!user){
+            return res.status(404).send('User does not exist')
         }
 
-        const validPassword = await bcrypt.compare(password, data.password )
+        const validPassword = await bcrypt.compare(password, user.password )
 
         if(!validPassword) {
             return res.status(400).send('Invalid credentials');
         }
 
-        const token = generateToken({email: data.email, role: data.role })
+        const token = generateToken({email: user.email, id: user._id })
 
-        res.json({token});
+        res.json({token, user});
 
     } catch(err){
         res.sendStatus(500)
