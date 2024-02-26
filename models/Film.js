@@ -12,6 +12,10 @@ const FilmSchema = new mongoose.Schema({
     genre: {
         required: true,
         type: String
+    },
+    img: {
+        type: String,
+        required: true
     }
 });
 

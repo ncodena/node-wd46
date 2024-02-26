@@ -27,14 +27,21 @@ export const getFilm = async (req, res) => {
 
 export const postFilm = async (req, res) => {
     try {
-        
         const {name, year, genre} = req.body;
-        console.log(name, year, genre)
-        const data = await Film.create({name, year, genre})
+        let imgBase64 = '';
+        //// req.file contains the file uploaded via the form field named 'img'
+         // If there's an uploaded file, convert it to base64 string, which is gonna be the value to be stored in db
+         //Base64 is a method of encoding binary data (like images) into a string of ASCII characters, which are more universally handled by systems. It's particularly useful for embedding images directly into HTML or CSS files.
+         if (req.file) {
+            imgBase64 = req.file.buffer.toString('base64');
+        }
+        const data = await Film.create({name, year, genre, img: imgBase64})
         res.status(201).json(data)
     } catch(err){
+        console.log(err)
         res.sendStatus(500)
     }
+
 }
 
 export const modifyFilm = async (req, res) => {
