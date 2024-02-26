@@ -1,4 +1,5 @@
 
+import cloudinary from "../db/configCloudinary.js";
 import Film from "../models/Film.js";
 
 export const getFilms = async (req, res) => {
@@ -28,14 +29,27 @@ export const getFilm = async (req, res) => {
 export const postFilm = async (req, res) => {
     try {
         const {name, year, genre} = req.body;
-        let imgBase64 = '';
-        //// req.file contains the file uploaded via the form field named 'img'
-         // If there's an uploaded file, convert it to base64 string, which is gonna be the value to be stored in db
-         //Base64 is a method of encoding binary data (like images) into a string of ASCII characters, which are more universally handled by systems. It's particularly useful for embedding images directly into HTML or CSS files.
-         if (req.file) {
-            imgBase64 = req.file.buffer.toString('base64');
+
+        let imageUrl = '';
+
+        // If there's an uploaded file, upload it to Cloudinary via upload_stream method
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream({
+                    //Specify the folder in Cloudinary to store the image. In my case, I call it films since all images stored are gonna be related to this topic
+                    folder: "films"
+                }, (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                });
+                // The file's data is sent to Cloudinary. req.file.buffer will contain the file's data as a binary buffer, which is what you're uploading. 
+                //The .end() method on the upload stream is used to write this buffer to the stream, initiating the upload process.
+                uploadStream.end(req.file.buffer);
+            });
+            // Once the promise resolves, the result object contains details about the uploaded file, including its URL on Cloudinary's servers. After the upload is successful, we store the image URL returned by Cloudinary
+            imageUrl = result.url; 
         }
-        const data = await Film.create({name, year, genre, img: imgBase64})
+        const data = await Film.create({name, year, genre, img: imageUrl})
         res.status(201).json(data)
     } catch(err){
         console.log(err)
